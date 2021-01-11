@@ -1,4 +1,4 @@
-const { User, Book } = require('../models');
+const { User } = require('../models');
 const { AuthenticationError } = require('apollo-server-express');
 const { signToken } = require('../utils/auth');
 
@@ -51,6 +51,21 @@ const resolvers = {
                 return user;
             }
             throw new AuthenticationError('Not logged in');
+        },
+
+        removeBook: async(parent, {bookId}, context) => {
+            if(context.user){
+                const removedBook = await User.findByIdAndUpdate(
+                    {_id: context.user._id},
+                    {$pull: { savedBooks: {bookId: bookId}}},
+                    {new: true}
+                )
+                .populate('books');
+
+                return removedBook;
+            }
+
+            throw new AuthenticationError('You need to be logged in');
         }
     }
 };
